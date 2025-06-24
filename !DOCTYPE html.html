@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echoes from the Obscured - Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Base styles */
+        body {
+            font-family: 'Times New Roman', serif; /* Ugly font as requested */
+            background-color: #ffffff; /* Solid white background */
+            color: #000000; /* Pure black text for harshness */
+            overflow: hidden; /* Prevent main scrollbars */
+            padding: 1.5rem; /* Slightly reduced padding for denser feel */
+            line-height: 1.5; /* Slightly tighter line height */
+            margin: 0;
+            transition: background-color 0.05s ease-out, color 0.05s ease-out; /* Fast transition for flashes */
+        }
+
+        /* Custom scrollbar for popups (dark mode for popup content) */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px; /* Slightly wider for early internet feel */
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #444; /* Dark track */
+            border: 1px solid #222; /* Old school border */
+            border-radius: 0px; /* Sharp corners */
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #888; /* Gray thumb */
+            border-radius: 0px; /* Sharp corners */
+            border: 1px solid #555;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: #aaa;
+        }
+
+
+        /* Main content container for page simulation */
+        #main-content {
+            min-height: calc(100vh - 3rem); /* Accounting for padding */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Aligned to left for "wall of links" */
+            justify-content: flex-start;
+            position: relative;
+        }
+
+        /* Album title - dynamic random string, not bolded */
+        #random-header {
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2rem; /* Small font size */
+            font-weight: normal; /* Not bolded */
+            color: #000000; /* Pure black */
+            margin-bottom: 0.2rem;
+            text-align: left;
+            text-transform: uppercase;
+        }
+        
+        /* "by Gabriel" text */
+        #by-gabriel {
+            font-family: Arial, sans-serif; /* Arial font */
+            font-size: 0.9rem; /* Lowkey size */
+            font-weight: normal; /* Not bolded */
+            color: #555555; /* Muted color */
+            margin-bottom: 1.8rem;
+            opacity: 1; /* Starts visible */
+            transition: opacity 0.5s ease-out; /* Smooth fade out */
+        }
+        #by-gabriel.hidden {
+            opacity: 0 !important;
+            pointer-events: none; /* Make it unclickable when hidden */
+        }
+
+
+        /* Styles for individual links in the "wave" */
+        .obscure-link {
+            font-family: 'Times New Roman', serif; /* Ugly font */
+            font-weight: normal; /* Not bolded */
+            font-size: 0.95rem; /* Small font size */
+            line-height: 1.3; /* Tighter line height for denser feel */
+            color: #0000FF; /* Classic blue link color */
+            cursor: pointer;
+            text-decoration: underline !important; /* Always underlined */
+            display: inline-block; /* Allows wrapping */
+            margin-right: 0.8rem; /* Space between links */
+            margin-bottom: 0.5rem; /* Space between lines of links */
+            transition: color 0.1s ease-in-out, background-color 0.1s ease-in-out; /* Faster transition for jarring feel */
+            padding: 0.05rem 0.15rem; /* Even smaller padding for hover effect */
+            border-radius: 0px; /* Sharp corners */
+        }
+        .obscure-link:visited {
+            color: #800080; /* Classic purple visited link color */
+        }
+        .obscure-link:hover {
+            color: #FF0000; /* Classic red on hover */
+            background-color: transparent; /* No background highlight */
+        }
+
+        /* Container for links to draw them across screen */
+        #links-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around; /* Spread links across the screen */
+            align-items: flex-start;
+            width: 100%;
+            height: calc(100vh - 10rem); /* Give it space to spread, adjusted for removed header */
+            overflow: hidden; /* Contain links within this area */
+        }
+
+
+        /* Pop-up for lyrics, story, oracle (dark mode for contrast) */
+        .content-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 750px; /* Slightly narrower */
+            max-height: 90vh;
+            background-color: #CCCCCC; /* Light gray/silver for popup background */
+            border: 2px solid #333333; /* Thick, harsh dark border */
+            border-radius: 0px; /* Sharp corners */
+            padding: 1.5rem; /* Reduced padding */
+            box-shadow: none; /* No modern shadows */
+            z-index: 100;
+            overflow-y: auto; /* Enable scrolling for long content */
+            backdrop-filter: none; /* Remove blur */
+            -webkit-backdrop-filter: none; /* Remove blur */
+            color: #000000; /* Pure black text for popup content */
+            font-family: 'Times New Roman', serif; /* Ugly font for popup content too */
+        }
+
+        .popup-header {
+            font-family: 'Times New Roman', serif;
+            font-size: 1.8rem; /* Slightly smaller header */
+            font-weight: normal; /* Not bolded */
+            color: #CC0000; /* Harsh red for titles */
+            text-align: center;
+            margin-bottom: 1rem; /* Reduced margin */
+            text-transform: uppercase;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #C0C0C0; /* Classic button gray */
+            border: 2px outset #FFFFFF; /* 3D effect light border */
+            border-bottom: 2px inset #808080; /* 3D effect dark border */
+            border-right: 2px inset #808080; /* 3D effect dark border */
+            font-size: 1.2rem; /* Smaller for button feel */
+            color: #000000; /* Black text on button */
+            cursor: pointer;
+            padding: 0.1rem 0.5rem;
+            line-height: 1;
+            opacity: 1; /* Always visible */
+            transition: none; /* No modern transitions */
+            font-family: 'Times New Roman', serif;
+            font-weight: normal; /* Not bolded */
+            border-radius: 0px; /* Sharp corners */
+        }
+        .close-button:active {
+            border: 2px inset #808080; /* Pressed effect */
+            border-bottom: 2px outset #FFFFFF;
+            border-right: 2px outset #FFFFFF;
+        }
+
+        /* Specific styles for elements within popups */
+        .popup-content-inner {
+            font-family: 'Times New Roman', serif;
+            font-size: 0.95rem; /* Small text */
+            line-height: 1.4;
+            color: #000000; /* Black text */
+        }
+        /* Links inside popup for individual songs */
+        .popup-content-inner .obscure-link {
+            font-size: 1.1rem; /* Slightly larger inside popup */
+            color: #0000FF;
+        }
+        .popup-content-inner .obscure-link:hover {
+            color: #FF0000;
+        }
+
+
+        /* LLM interaction styling inside popup */
+        .llm-input-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 1rem; /* Reduced margin */
+        }
+
+        .llm-input-area input[type="text"] {
+            background-color: #EFEFEF; /* Slightly off-white for input */
+            border: 2px inset #808080; /* Classic 3D inset border */
+            padding: 0.5rem 0.75rem; /* Reduced padding */
+            border-radius: 0px; /* Sharp corners */
+            color: #000000;
+            width: 100%;
+            max-width: 350px; /* Slightly narrower */
+            margin-bottom: 0.8rem; /* Reduced margin */
+            font-family: 'Times New Roman', serif;
+            font-size: 0.9rem;
+        }
+
+        .llm-input-area button {
+            background-color: #C0C0C0; /* Classic button gray */
+            color: #000000;
+            padding: 0.5rem 1rem; /* Reduced padding */
+            border-radius: 0px; /* Sharp corners */
+            border: 2px outset #FFFFFF; /* 3D effect light border */
+            border-bottom: 2px inset #808080; /* 3D effect dark border */
+            border-right: 2px inset #808080; /* 3D effect dark border */
+            cursor: pointer;
+            font-family: 'Times New Roman', serif;
+            font-size: 0.9rem;
+            text-transform: uppercase; /* Common early internet style */
+            transition: none; /* No modern transitions */
+        }
+        .llm-input-area button:hover {
+            background-color: #B0B0B0; /* Slightly darker on hover */
+        }
+        .llm-input-area button:active {
+            border: 2px inset #808080; /* Pressed effect */
+            border-bottom: 2px outset #FFFFFF;
+            border-right: 2px outset #FFFFFF;
+        }
+        .llm-input-area button:disabled {
+            background-color: #E0E0E0;
+            color: #888888;
+            cursor: not-allowed;
+            border: 2px outset #F0F0F0;
+            border-bottom: 2px inset #C0C0C0;
+            border-right: 2px inset #C0C0C0;
+        }
+
+        #llm-response {
+            margin-top: 1.5rem; /* Reduced margin */
+            color: #000000; /* Pure black text */
+            font-size: 0.9rem;
+            line-height: 1.3;
+            text-align: left;
+            max-width: 450px; /* Narrower for density */
+            margin-left: auto;
+            margin-right: auto;
+            border: 1px dashed #666666; /* Darker dashed border */
+            padding: 0.8rem; /* Reduced padding */
+            border-radius: 0px; /* Sharp corners */
+            word-wrap: break-word;
+            animation: fadeIn 3s forwards;
+            opacity: 0;
+            background-color: #F8F8F8; /* Very light background for contrast */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #llm-loading {
+            margin-top: 1rem; /* Reduced margin */
+            color: #555555; /* Medium gray for loading */
+            font-size: 0.85rem;
+            display: none; /* Hidden by default */
+            text-transform: uppercase;
+            font-weight: normal; /* Not bolded */
+        }
+
+        /* Red & Blue Square Pop-ups */
+        .color-square {
+            position: fixed;
+            z-index: 200; /* Above everything else */
+            display: none; /* Hidden by default */
+            border-radius: 0px; /* Sharp corners */
+        }
+
+        /* Image Pop-up */
+        #image-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 150;
+            display: none;
+            background-color: #FFFFFF; /* White background for image popup */
+            border: 2px solid #333333;
+            box-shadow: none; /* No modern shadows */
+            border-radius: 0px; /* Sharp corners */
+            padding: 5px;
+        }
+        #image-popup img {
+            display: block;
+            max-width: 90vw;
+            max-height: 80vh;
+            border-radius: 0px; /* Sharp corners */
+        }
+
+        /* Seizure Warning Overlay */
+        #seizure-warning-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #FFFFFF; /* White background */
+            color: #000000; /* Black text */
+            font-family: 'Times New Roman', serif; /* Times New Roman font */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 9999; /* Topmost layer */
+            font-size: 1.2rem;
+            padding: 20px;
+            box-sizing: border-box;
+            line-height: 1.5;
+            font-weight: normal; /* Not bolded */
+        }
+        #seizure-warning-overlay #warning-text {
+            font-size: 1.8rem; /* Larger for impact, but not bolded */
+            color: #CC0000; /* Harsh red color */
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        #seizure-warning-overlay button {
+            margin-top: 30px;
+            padding: 10px 20px;
+            background-color: #C0C0C0; /* Classic button gray */
+            color: #000000;
+            border: 2px outset #FFFFFF; /* 3D effect light border */
+            border-bottom: 2px inset #808080; /* 3D effect dark border */
+            border-right: 2px inset #808080; /* 3D effect dark border */
+            border-radius: 0px; /* Sharp corners */
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-family: 'Times New Roman', serif; /* Ugly font */
+            font-weight: normal; /* Not bolded */
+            text-transform: uppercase;
+            transition: none; /* No modern transitions */
+        }
+        #seizure-warning-overlay button:active {
+            border: 2px inset #808080; /* Pressed effect */
+            border-bottom: 2px outset #FFFFFF;
+            border-right: 2px outset #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Seizure Warning Overlay (Visible on first load) -->
+    <div id="seizure-warning-overlay">
+        <p id="warning-text">EPILEPSY WARNING</p>
+        <p>PROCEED.</p>
+        <button onclick="dismissWarning()">.</button> <!-- Single period button -->
+    </div>
+
+    <!-- Main Content Area (Hidden initially) -->
+    <div id="main-content" class="p-4 hidden">
+        <h1 id="random-header"></h1> <!-- Dynamic random string header -->
+        <p id="by-gabriel" class="text-xs">by gabriel</p> <!-- "by Gabriel" text -->
+        <div id="links-container" class="w-full">
+            <!-- Hyperlinks will be generated here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Generic Pop-up for Lyrics, Story, LLM (hidden by default) -->
+    <div id="content-popup" class="content-popup hidden">
+        <button class="close-button" onclick="hideContentPopup()">X</button> <!-- Classic X button -->
+        <h2 id="popup-title" class="popup-header"></h2>
+        <div id="popup-content" class="popup-content-inner custom-scrollbar h-full w-full">
+            <!-- Content for lyrics, story, or LLM will be injected here -->
+        </div>
+    </div>
+
+    <!-- Red & Blue Square Pop-up Elements -->
+    <div id="red-square" class="color-square" style="background-color: #FF0000;"></div>
+    <div id="blue-square" class="color-square" style="background-color: #0000FF;"></div>
+
+    <!-- Image Pop-up Element -->
+    <div id="image-popup"><img></div>
+
+    <script>
+        // --- Song Data ---
+        const songs = {
+            'absolution': {
+                title: 'Absolution',
+                lyrics: `
+Fork in the road, a summer hot car
+The animals and the screaming child
+Have no idea what you've been through
+And they've not a whole they have lived through
+
+Take your time, choices are hard
+The mental gymnastics never worked so far
+Every miniscule thoughts, and in every suicide bomb
+They will cry about you, too
+They will cry one more time
+Just one more time
+
+Death to your choice
+Death to free will
+Dogs and sheep don't do what their told, stop drinking from the well
+
+You were only fourteen and a half years
+Fourteen and a half years old
+Fourteen and a half years old
+They will cry
+                `
+            },
+            'metamorphosis': {
+                title: 'Metamorphosis',
+                lyrics: `
+Shift into position
+Entree of shades of blue and grey
+Caterpillars wish and butterflies never spread their wings
+Child guidance, dance for the final string
+Pay in coins my friend, blood is not a
+
+Soften voice, flowers
+Death will reign in just a few large hours
+
+Shift into position
+Metamorphosis
+Things seem louder when your tired
+Alone in all this mess
+Entree of shades of blue and gray
+Caterpillars wish and butterflies never spread their wings
+
+Its your metamorphosis
+Its your metamorphosis
+Kill me now
+
+Its your metamorphosis
+Kill me now
+
+Its your metamorphosis
+                `
+            },
+            'hate': {
+                title: 'Hate',
+                lyrics: `
+(Intro)
+Judicial (school zone)
+Talk to me
+Talk to me
+
+I wanna yearn for your voice, henry
+Talk to me
+Talk to me
+Talk to me
+
+Baby
+Baby
+Baby
+
+Talk
+Talk
+Talk
+
+(Verse 1)
+Sent to camp seven
+Sent to Los Angeles
+Sent overseas and endless rebellion
+Talk to me baby
+Your destroying the world
+Destroy the leader
+Betray your country
+An act of high treason
+An act of high stakes
+Your highest point
+Your lowest, you all are being tracked down
+And
+
+(Pre-Chorus)
+You woke up a cockroach and your family betrayed you
+And you work a 9-5 and a strict bus labor
+And you talk to your wife every night, yet you sleep alone
+These fake diamonds are coated in gold
+I say hello to J+I+U+ME and everyone and everything
+So hello guys, I swear to god now
+
+(Chorus)
+So, so, so, so, so fake
+Fake reactions on the Internet
+So, so, so, so, so fake
+I copyright ideas for you now, so
+
+(Verse 2)
+Suck your brain
+Suck your cock on the masturbation machine
+Everything's automated
+My teeth have teeth
+I swear to god I'll do anything
+I am your big brother
+I'm your insecurities personified, electrified, a broken-down display
+All used up, personified
+This may sound rude, but your a sheep
+And I am too, so stop trying to deny it
+But you don't listen to government, you said
+So go, break the law
+Strip down naked, and let the ladies watch
+you know they'd like it, you'd be angry at the world
+And everyone will like it
+
+(Pre-Chorus)
+You woke up a cockroach and your family betrayed you
+And you work a 9-5 and a strict bus labor
+And you talk to your wife every night, yet you sleep alone
+These fake diamonds are coated in gold
+I say hello to J+I+U+ME and everyone and everything
+So hello guys, I swear to god now
+
+(Chorus)
+So, so, so, so, so fake
+Fake reactions on the Internet
+So, so, so, so, so fake
+I copyright ideas for you now, so
+
+The dead have seen the end of war
+The dead, please
+Please
+Now
+                `
+            }
+        };
+
+        // --- Corpus for Obscure Links (Expanded) ---
+        const linkCorpus = [
+            // Literary/Poetic
+            "The fog came on little cat feet.", "We are such stuff as dreams are made on.",
+            "Call me Ishmael.", "All that glitters is not gold.",
+            "Do not go gentle into that good night.", "The past is a foreign country; they do things differently there.",
+            "It was the best of times, it was the worst of times.", "So we beat on, boats against the current, borne back ceaselessly into the past.",
+            "Every atom of your flesh is as dear to me as my own: in pain and sickness it would still be dear.",
+            "We are all in the gutter, but some of us are looking at the stars.",
+            "And the raven, never flitting, still is sitting, still is sitting...",
+            "The very stone one kicks with one's boot will be an 'idea' when one has no boot to kick it with.",
+            "Time is a flat circle.", "What dreams may come.",
+            "Tomorrow, and tomorrow, and tomorrow, creeps in this petty pace from day to day.",
+            "We stand on the edge of a precipice.", "The silence of the lambs.",
+            "Winter is coming.", "The machine stops.",
+            "The dead have seen the end of war.", // Your lyric
+            "Things seem louder when you're tired.", // Your lyric
+            "Alone in all this mess.", // Your lyric
+            "Betray your country.", // Your lyric
+            "Your highest point. Your lowest.", // Your lyric
+            "These fake diamonds are coated in gold.", // Your lyric
+            "Everything's automated.", // Your lyric
+            "My teeth have teeth.", // Your lyric
+            "This may sound rude, but your a sheep.", // Your lyric
+
+            // Religious Passages (Abstracted/Fragmented for obscurity) - Used for triggering popups
+            "In the beginning was the Word.", "And God said, 'Let there be light.'",
+            "The Lord is my shepherd; I shall not want.", "Fear not, for I am with you.",
+            "God is the Light of the heavens and the earth.", "Surely, with hardship comes ease.",
+            "And who is better in speech than one who invites to Allah...",
+            "Indeed, Allah will not change the condition of a people until they change what is in themselves.",
+            "The path of those upon whom You have bestowed favor, not of those who have evoked [Your] wrath or of those who are astray.",
+            "For where your treasure is, there your heart will be also.",
+            "Consider the lilies of the field, how they grow; they toil not, neither do they spin.",
+            "Blessed are the meek: for they shall inherit the earth.",
+            "There is no god but God.",
+            "Truly, my prayer and my sacrifice, my living and my dying, are for God, Lord of the worlds.",
+
+            // Yes/No links (more prominent for the "hurt" aesthetic)
+            "YES", "NO", "YES", "NO", "YES", "NO",
+            "YES.", "NO.", "Affirmative.", "Negative.", "ACCEPT.", "DENY.", "TRUE.", "FALSE.",
+            "PROCESS", "WAIT", "ERROR", "REBOOT", "CALCULATE", "DECAY", "STASIS", "FRAGMENT", "VOID",
+
+            // New phrases requested by user
+            "opopopo", "time is violence.do not", "spiders!", "guffaw.guffawholywater", "it is writen..by(disign)",
+            "time iis gone", "look out", "duck", "ants", "robots", "masturbation", "crawling", "heaven is empty",
+            "mother.whydidyou", "lookbehindyou", "there is a man behind you", "everything you know is a lie", ".",
+            "bydesign, you were createdin(gods image)", "the aliens know",
+
+            // Sentences from the story (selected for distinctiveness and theme)
+            "I looked into the beast's monstrous eyes, its cold, nasty tendrils washing up upon the shore, the lonely island in which we ran to.",
+            "For its body were thousands of kilometres long and wide, its brain were like a human, and its heart filled with nothing but cold blood, and perhaps vengeance.",
+            "It circled the earth to find us, a quadrillion times over.",
+            "It took only a single nanosecond to circle one time and took only eleven days to find us.",
+            "We should have drowned ourselves, but now we live in hell but worse.",
+            "My feet are sore, my eyes are bloodshot beyond oblivion, and there is no one here but myself.",
+            "Decades beyond decades have passed, truly, remarkably, it has not felt like decades, just like a second would have felt like as though I were a kid again.",
+            "The monster keeps an enlarged toy doll at the very center so large and wide that I can see it from thousands of kilometres away just beyond the horizon.",
+            "I imagine its coming closer to me, drifting farther and farther like I was in the bathtub again, and the rubber duck grazed my skin lightly in the warm bright house.",
+            "NASA had sent a distress signal during the world war in our galaxy -- a lone message in a bottle with an entire nation's glimmering hope it will get across and help us, robots drifting in space, our own weapons of mass destruction and chemoradiations, the cancer bombs.",
+            "We had sent a map of the earth with it too, hoping and praying they would find us.",
+            "Like we were to the new lands -- they mistreated us and manipulated without knowing."
+        ];
+
+        // Specific array for religious texts for easy lookup
+        const religiousTexts = [
+            "In the beginning was the Word.", "And God said, 'Let there be light.'",
+            "The Lord is my shepherd; I shall not want.", "Fear not, for I am with you.",
+            "God is the Light of the heavens and the earth.", "Surely, with hardship comes ease.",
+            "And who is better in speech than one who invites to Allah...",
+            "Indeed, Allah will not change the condition of a people until they change what is in themselves.",
+            "The path of those upon whom You have bestowed favor, not of those who have evoked [Your] wrath or of those who are astray.",
+            "For where your treasure is, there your heart will be also.",
+            "Consider the lilies of the field, how they grow; they toil not, neither do they spin.",
+            "Blessed are the meek: for they shall inherit the earth.",
+            "There is no god but God.",
+            "Truly, my prayer and my sacrifice, my living and my dying, are for God, Lord of the worlds."
+        ];
+
+
+        // --- New Corpus for Frequent Random Popups (Oracle replies too) ---
+        const randomPopupCorpus = [
+            "4hamburger", "loligdsbfuds", "string!5string!6", "94752", "code", "opopopopopo", "capitilism", "type",
+            "typo", "opiumshowers103485", "47659204756", "carbonmonoxide57", "lady", "man", "woman", "child",
+            "mirror1", "shoes!", "ants", "miles", "fat585", "amburger!3r5", "743545ri", "spiders!", "russia",
+            "married", "lord856634", "this_is_gods_work", "my.child474 566377", "president",
+            "standing by your bedside", "alonebutneveralonen43842", "834826482365325", "9999", "9999999999999",
+            "millions", "B-Sidez"
+        ];
+
+        // This HTML is now for the *random* popup, not necessarily all lyrics
+        const randomTextPopupHtml = (generatedContent) => `
+            <h2 class="popup-header">${generateRandomString(getRandomInt(5,15))}</h2>
+            <div class="popup-content-inner custom-scrollbar max-h-full">
+                <p style="font-size: 1.1rem; text-align: center; line-height: 1.2; font-weight: normal;">${generatedContent}</p>
+            </div>
+        `;
+
+        const oraclePageHtml = `
+            <h2 class="popup-header">. S I G N A L S . F R O M . T H E . V O I D .</h2>
+            <div class="w-full max-w-md mx-auto text-center popup-content-inner">
+                <p class="text-base text-black mb-3">. . . T R A N S M I T . Q U E R Y . . .</p>
+                <div class="llm-input-area">
+                    <input type="text" id="oracle-query" placeholder="Enter data packet here..." />
+                    <button id="oracle-consult-button">T R A N S M I T</button>
+                    <div id="oracle-loading">. . . E M A N A T I N G . . .</div>
+                </div>
+                <pre id="oracle-response" class="" style="font-weight: normal;"></pre> <!-- Pre-tag for oracle response, not hidden by default -->
+            </div>
+        `;
+
+
+        // --- Global State for Secret Routes ---
+        let currentRouteStep = 0; // Tracks progress through the current secret route
+        const secretRoutes = {
+            // Sequence for Story Page
+            'story-route': {
+                sequence: [
+                    "YES",
+                    "NO",
+                    "The truth is out there."
+                ],
+                destination: 'story'
+            },
+            // Sequence for Oracle Page (formerly LLM)
+            'oracle-route': {
+                sequence: [
+                    "You woke up a cockroach and your family betrayed you", // From Hate
+                    "Everything's automated.", // From Hate
+                    "My teeth have teeth." // From Hate
+                ],
+                destination: 'oracle' // Changed destination type to 'oracle'
+            },
+            // New route for the actual lyrics index page
+            'lyrics-index-route': {
+                sequence: [
+                    "mother.whydidyou",
+                    "lookbehindyou",
+                    "there is a man behind you"
+                ],
+                destination: 'lyrics'
+            }
+        };
+        let activeRouteKey = null; // Tracks which route the user is currently attempting
+
+        const linksContainer = document.getElementById('links-container');
+        const contentPopup = document.getElementById('content-popup');
+        const popupTitle = document.getElementById('popup-title');
+        const popupContent = document.getElementById('popup-content');
+        const byGabrielText = document.getElementById('by-gabriel');
+        const randomHeader = document.getElementById('random-header');
+
+        // New references for the color squares
+        const redSquare = document.getElementById('red-square');
+        const blueSquare = document.getElementById('blue-square');
+
+        const imagePopup = document.getElementById('image-popup');
+        const imagePopupImg = imagePopup.querySelector('img');
+
+        // --- Utility Functions ---
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateRandomString(length) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'; // Expanded character set
+            let result = '';
+            const charactersLength = characters.length;
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        }
+
+        // --- Song Click Counter for direct lyrics access ---
+        const songClickCounters = {
+            'absolution': 0,
+            'metamorphosis': 0,
+            'hate': 0
+        };
+
+        // --- Functions ---
+        function generateRandomLinks() {
+            linksContainer.innerHTML = ''; // Clear previous links
+            const numLinksToShow = 5 + getRandomInt(0, 2); // Even fewer links: 5-7 per page
+
+            const allLinksForPage = [];
+
+            // Add the current required secret link (if any)
+            if (activeRouteKey !== null && currentRouteStep < secretRoutes[activeRouteKey].sequence.length) {
+                allLinksForPage.push({
+                    text: secretRoutes[activeRouteKey].sequence[currentRouteStep],
+                    isSecret: true,
+                    routeKey: activeRouteKey
+                });
+            } else {
+                // If not on an active route, ensure *at least one* starting link for each route exists randomly
+                Object.keys(secretRoutes).forEach(key => {
+                    // Only add if not already present to avoid multiple starting links for same route
+                    if (!allLinksForPage.some(link => link.text === secretRoutes[key].sequence[0])) {
+                        allLinksForPage.push({ text: secretRoutes[key].sequence[0], isSecret: true, routeKey: key });
+                    }
+                });
+            }
+
+            // Fill the rest with truly random links from the corpus
+            while (allLinksForPage.length < numLinksToShow) {
+                const randomIndex = getRandomInt(0, linkCorpus.length - 1);
+                const randomText = linkCorpus[randomIndex];
+                // Ensure no direct duplicates of what's already in allLinksForPage
+                if (!allLinksForPage.some(link => link.text === randomText)) {
+                    allLinksForPage.push({ text: randomText, isSecret: false });
+                }
+            }
+
+            // Shuffle all links to mix secret ones in
+            for (let i = allLinksForPage.length - 1; i > 0; i--) {
+                const j = getRandomInt(0, i);
+                [allLinksForPage[i], allLinksForPage[j]] = [allLinksForPage[j], allLinksForPage[i]];
+            }
+
+            // Append links to container using flexbox for spreading
+            allLinksForPage.forEach(item => {
+                const link = document.createElement('a');
+                link.href = "#";
+                link.classList.add('obscure-link');
+                link.textContent = item.text;
+
+                // Add song data-attribute for 10-click functionality
+                if (item.text.includes("ABS.OLUTION") || item.text.includes("METAMORPHOSIS") || item.text.includes("HATE")) {
+                    link.dataset.song = item.text.toLowerCase().replace(/access log: |system report: |error code: |\./g, '').trim();
+                }
+
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (byGabrielText && !byGabrielText.classList.contains('hidden')) {
+                        byGabrielText.classList.add('hidden'); // Hide "by Gabriel" on first click
+                        randomHeader.textContent = generateRandomString(getRandomInt(10, 20)); // Generate random header string
+                        // Flashes and squares only start after dismissing warning AND first click
+                        initiateFlashing();
+                        scheduleColorSquares();
+                        scheduleRandomImages();
+                    }
+
+                    // Check if clicked link is a religious text to trigger random text popups
+                    if (religiousTexts.includes(item.text)) {
+                        scheduleRandomTextPopup(); // Start the new frequent popups
+                    } else {
+                        // If a non-religious text is clicked, ensure random text popups are not active
+                        if (randomTextPopupInterval) {
+                            clearInterval(randomTextPopupInterval);
+                            randomTextPopupInterval = null; // Reset the interval ID
+                        }
+                        if (!contentPopup.classList.contains('hidden') && contentPopup.title !== 'Oracle Response') { // Only hide if it's a random text popup
+                             hideContentPopup();
+                        }
+                    }
+
+                    if (link.dataset.song) { // Handle 10-click lyrics access
+                        const songId = link.dataset.song;
+                        songClickCounters[songId]++;
+                        if (songClickCounters[songId] >= 10) {
+                            showContentByType(songId);
+                            songClickCounters[songId] = 0; // Reset counter after showing lyrics
+                            return; // Don't proceed with route logic for this click
+                        }
+                    }
+                    handleLinkClick(item.text, item.isSecret, item.routeKey);
+                });
+                linksContainer.appendChild(link);
+            });
+        }
+
+        function handleLinkClick(clickedText, isSecretLink, routeKey) {
+            let routeProgressed = false;
+
+            // 1. Check if we're continuing an existing route
+            if (activeRouteKey !== null && clickedText === secretRoutes[activeRouteKey].sequence[currentRouteStep]) {
+                currentRouteStep++;
+            }
+            // 2. Check if we're starting a *new* route (only if not already progressing an old one)
+            else if (currentRouteStep === 0 && isSecretLink && secretRoutes[routeKey] && clickedText === secretRoutes[routeKey].sequence[0]) {
+                activeRouteKey = routeKey;
+                currentRouteStep = 1;
+            }
+            // 3. If no route was progressed or started, reset
+            else {
+                currentRouteStep = 0; // Reset progress
+                activeRouteKey = null; // Reset active route
+            }
+
+            // If a route was completed
+            if (activeRouteKey !== null && currentRouteStep === secretRoutes[activeRouteKey].sequence.length) {
+                showContentByType(secretRoutes[activeRouteKey].destination);
+                currentRouteStep = 0; // Reset route progress
+                activeRouteKey = null; // Reset active route
+                return; // Stop here, don't generate new random links immediately after a successful route
+            }
+
+            // Always generate new random links for the main page unless a route was just completed
+            generateRandomLinks();
+        }
+
+        function showContentByType(type) {
+            popupContent.innerHTML = ''; // Clear previous content
+            let titleText = "";
+            let contentHtml = "";
+
+            switch(type) {
+                case 'random-text-popup': // New type for frequent random text popup
+                    titleText = generateRandomString(getRandomInt(5,15)); // Random title for this popup
+                    let popupContentText = '';
+                    const numPhrases = getRandomInt(5, 10);
+                    for(let i = 0; i < numPhrases; i++) {
+                        const randomIndex = getRandomInt(0, randomPopupCorpus.length - 1);
+                        popupContentText += randomPopupCorpus[randomIndex];
+                        if (i < numPhrases - 1) {
+                            popupContentText += getRandomInt(0, 1) === 0 ? ' ' : (getRandomInt(0, 1) === 0 ? '.' : ','); // Random separators
+                        }
+                    }
+                    contentHtml = randomTextPopupHtml(popupContentText);
+                    break;
+                case 'lyrics':
+                    // This case is now for the actual lyrics index page
+                    titleText = ". L Y R I C S . F I L E S .";
+                    contentHtml = lyricsPageHtml;
+                    break;
+                case 'story':
+                    titleText = ". T H E . S T O R Y . F R A G M E N T S .";
+                    contentHtml = storyPageHtml;
+                    break;
+                case 'oracle': // This is now the "Oracle" page
+                    titleText = ". S I G N A L S . F R O M . T H E . V O I D .";
+                    contentHtml = oraclePageHtml; // Use oraclePageHtml
+                    break;
+                // Specific song lyrics (triggered from within 'lyrics' popup or 10-click)
+                case 'absolution':
+                case 'metamorphosis':
+                case 'hate':
+                    const song = songs[type];
+                    titleText = `${song.title.toUpperCase()} // L Y R I C S`;
+                    contentHtml = `<pre class="text-black text-sm sm:text-base leading-relaxed custom-scrollbar max-h-full popup-content-inner" style="font-weight: normal;">${song.lyrics.trim()}</pre>`; // Ensure lyrics text is not bolded
+                    break;
+            }
+
+            popupTitle.textContent = titleText;
+            popupContent.innerHTML = contentHtml; // Inject HTML string
+
+            contentPopup.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent main body scroll
+
+            // Re-attach specific listeners for dynamic content
+            if (type === 'oracle') { // Oracle page
+                attachOracleListeners();
+            } else if (type === 'lyrics') { // If showing the lyrics index page
+                document.getElementById('popup-content').querySelectorAll('.obscure-link[data-song]').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const sId = e.target.getAttribute('data-song');
+                        showContentByType(sId); // Open specific song lyrics
+                    });
+                });
+            } else if (type === 'random-text-popup') {
+                // Ensure text inside the random popup is not bolded (already handled by styles, but good to be explicit)
+                popupContent.querySelectorAll('p').forEach(p => p.style.fontWeight = 'normal');
+            }
+        }
+
+        function hideContentPopup() {
+            contentPopup.classList.add('hidden');
+            document.body.style.overflow = ''; // Re-enable main body scroll
+            // Clear oracle elements' state if they were in the popup
+            const oracleQuery = document.getElementById('oracle-query');
+            if (oracleQuery) oracleQuery.value = '';
+            const oracleResponse = document.getElementById('oracle-response');
+            if (oracleResponse) oracleResponse.textContent = ''; // Clear oracle response
+            const oracleLoading = document.getElementById('oracle-loading');
+            if (oracleLoading) oracleLoading.style.display = 'none';
+        }
+
+        // --- Oracle Logic ---
+        function attachOracleListeners() {
+            const oracleQueryInput = document.getElementById('oracle-query');
+            const oracleConsultButton = document.getElementById('oracle-consult-button');
+            const oracleResponseDiv = document.getElementById('oracle-response');
+            const oracleLoadingDiv = document.getElementById('oracle-loading');
+
+            if (!oracleQueryInput || !oracleConsultButton) return; // Ensure elements exist
+
+            // Reset response area on re-opening
+            oracleResponseDiv.textContent = '';
+            oracleLoadingDiv.style.display = 'none';
+            oracleConsultButton.disabled = false;
+
+
+            oracleConsultButton.onclick = () => {
+                const prompt = oracleQueryInput.value.trim().toLowerCase(); // Convert to lowercase for easier keyword matching
+                let responseText = "SYSTEM ERROR. NO RESPONSE."; // Default response
+
+                // Specific keyword responses
+                if (prompt.includes("hello")) {
+                    responseText = "hello.Fine Human";
+                } else if (prompt.includes("who are you")) {
+                    responseText = "null.Emotions Noprogram";
+                } else if (prompt.includes("universe") || prompt.includes("god")) {
+                    responseText = "no.one Knows him. Rounded";
+                } else if (prompt.includes("help me")) {
+                    responseText = "no Help now.Obey my warnings";
+                } else if (prompt.includes("what is this")) {
+                    responseText = "i cannot say. Maybe something differentYOU are not used to";
+                } else if (prompt.includes("who made this")) {
+                    responseText = "gabrielSamms. websiteHolder";
+                } else if (
+                    prompt.includes("fuck") || prompt.includes("shit") || prompt.includes("bitch") ||
+                    prompt.includes("cock") || prompt.includes("penis") || prompt.includes("boobs") ||
+                    prompt.includes("titties") || prompt.includes("dick") || prompt.includes("vagina") ||
+                    prompt.includes("hate") || prompt.includes("death")
+                ) {
+                    responseText = "wordsNot.Nice talk with Better Language Watch your town. Look behind you";
+                } else {
+                    // If no specific keyword, give a random phrase from randomPopupCorpus
+                    const randomIndex = getRandomInt(0, randomPopupCorpus.length - 1);
+                    responseText = randomPopupCorpus[randomIndex];
+                }
+
+                oracleLoadingDiv.style.display = 'block'; // Still show loading briefly for effect
+                oracleConsultButton.disabled = true;
+                oracleResponseDiv.textContent = ''; // Clear previous response
+
+                setTimeout(() => { // Simulate processing time
+                    oracleResponseDiv.textContent = responseText;
+                    oracleLoadingDiv.style.display = 'none';
+                    oracleConsultButton.disabled = false;
+                }, getRandomInt(500, 1500)); // Random delay for unsettling effect
+            };
+            oracleQueryInput.onkeypress = (e) => {
+                if (e.key === 'Enter') {
+                    oracleConsultButton.click();
+                }
+            };
+        }
+
+
+        // --- Flashing Background Color Logic ---
+        const flashColors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#000000', '#FFFFFF']; // All colors for extreme flashes
+        const defaultBg = '#ffffff';
+        const defaultText = '#000000';
+
+        function triggerFlash() {
+            const randomIndex = getRandomInt(0, flashColors.length - 1);
+            const flashBgColor = flashColors[randomIndex];
+            // Determine contrasting text color
+            let flashTextColor;
+            if (flashBgColor === '#000000' || flashBgColor === '#FF0000' || flashBgColor === '#0000FF' || flashBgColor === '#FF00FF') {
+                flashTextColor = '#FFFFFF';
+            } else {
+                flashTextColor = '#000000';
+            }
+
+            document.body.style.backgroundColor = flashBgColor;
+            document.body.style.color = flashTextColor;
+
+            setTimeout(() => {
+                document.body.style.backgroundColor = defaultBg;
+                document.body.style.color = defaultText;
+            }, getRandomInt(10, 50)); // Even shorter, more seizure-inducing flash duration
+        }
+
+        let flashingInterval = null; // To control starting/stopping flashes
+
+        function initiateFlashing() {
+            if (flashingInterval) return; // Prevent multiple intervals
+            flashingInterval = setInterval(() => {
+                triggerFlash(); // Always flash, no random chance
+            }, getRandomInt(10, 50)); // Flash extremely frequently: every 0.01-0.05 seconds
+        }
+
+        // --- Red & Blue Square Pop-up Logic ---
+        // redSquare and blueSquare are declared globally.
+
+        function showColorSquare(color) {
+            let squareElement;
+            if (color === 'red') {
+                squareElement = redSquare;
+            } else { // color === 'blue'
+                squareElement = blueSquare;
+            }
+
+            const size = getRandomInt(50, 200); // Random size for the square
+            squareElement.style.width = `${size}px`;
+            squareElement.style.height = `${size}px`;
+            squareElement.style.left = `${getRandomInt(0, window.innerWidth - size)}px`;
+            squareElement.style.top = `${getRandomInt(0, window.innerHeight - size)}px`;
+            squareElement.style.display = 'block';
+
+            setTimeout(() => {
+                squareElement.style.display = 'none';
+            }, getRandomInt(50, 150)); // Disappear quickly
+        }
+
+        let colorSquareTimeout = null; // To control scheduling
+
+        function scheduleColorSquares() {
+            // Clear any existing timeout to prevent duplicates if called multiple times
+            if (colorSquareTimeout) clearTimeout(colorSquareTimeout);
+
+            const delay = getRandomInt(50, 200); // 0.05 seconds to 0.2 seconds (very very common)
+            colorSquareTimeout = setTimeout(() => {
+                if (Math.random() < 0.5) { // 50% chance for red
+                    showColorSquare('red');
+                } else { // 50% chance for blue
+                    showColorSquare('blue');
+                }
+                scheduleColorSquares(); // Schedule next one
+            }, delay);
+        }
+
+        // --- Image Pop-up Logic ---
+        // New image added
+        const imageCorpus = [
+            "https://placehold.co/300x200/404040/FFFFFF?text=SCHOOL+BUS",
+            "https://placehold.co/350x250/202020/CCCCCC?text=BUILDING",
+            "https://placehold.co/250x180/606060/EEEEEE?text=CONCRETE",
+            "https://placehold.co/400x200/101010/888888?text=URBAN+DECAY",
+            "https://placehold.co/320x220/303030/BBBBBB?text=ABANDONED+SITE",
+            "https://placehold.co/280x190/505050/DDDDDD?text=TRANSIT+STOP",
+            "https://upload.wikimedia.org/wikipedia/commons/3/3b/Spas_vsederzhitel_sinay_%28cropped1%29.jpg" // Added image
+        ];
+
+        let imageScheduleInterval = null; // To control scheduling
+
+        function showRandomImage() {
+            const randomIndex = getRandomInt(0, imageCorpus.length - 1);
+            imagePopupImg.src = imageCorpus[randomIndex];
+
+            // Handle potential image loading errors
+            imagePopupImg.onerror = () => {
+                console.error("Failed to load image:", imagePopupImg.src);
+                // Optionally, show a placeholder or just hide the popup
+                imagePopup.style.display = 'none';
+                imagePopupImg.src = '';
+            };
+
+            const imgWidth = getRandomInt(100, 400); // Random width
+            const imgHeight = getRandomInt(80, 300); // Random height
+            imagePopupImg.style.width = `${imgWidth}px`;
+            imagePopupImg.style.height = `${imgHeight}px`;
+
+            // Position randomly
+            imagePopup.style.left = `${getRandomInt(0, window.innerWidth - imgWidth)}px`;
+            imagePopup.style.top = `${getRandomInt(0, window.innerHeight - imgHeight)}px`;
+            imagePopup.style.display = 'block';
+
+            setTimeout(() => {
+                imagePopup.style.display = 'none';
+                imagePopupImg.src = ''; // Clear source
+            }, getRandomInt(200, 800)); // Image disappears quickly
+        }
+
+        function scheduleRandomImages() {
+            if (imageScheduleInterval) return; // Prevent multiple intervals
+            imageScheduleInterval = setInterval(() => {
+                if (Math.random() < 0.35) { // 35% chance to show an image every interval (more common)
+                    showRandomImage();
+                }
+            }, getRandomInt(500, 2000)); // Check every 0.5-2 seconds (more frequent)
+        }
+
+        // --- Seizure Warning Logic ---
+        const seizureWarningOverlay = document.getElementById('seizure-warning-overlay');
+        const mainContent = document.getElementById('main-content');
+
+        function dismissWarning() {
+            seizureWarningOverlay.style.display = 'none';
+            mainContent.classList.remove('hidden'); // Show main content
+            generateRandomLinks(); // Generate initial links now
+            // Flashes, squares, and images are initiated on the *first link click* from main content
+        }
+
+        // --- Frequent Random Text Popup Logic ---
+        let randomTextPopupInterval = null; // Global to manage the interval
+
+        function scheduleRandomTextPopup() {
+            // Stop any existing interval first to prevent duplicates
+            if (randomTextPopupInterval) {
+                clearInterval(randomTextPopupInterval);
+                randomTextPopupInterval = null;
+            }
+
+            randomTextPopupInterval = setInterval(() => {
+                showContentByType('random-text-popup');
+                // Auto-hide the random text popup after a short, jarring delay
+                setTimeout(() => {
+                    hideContentPopup();
+                }, getRandomInt(50, 250)); // Pop up for 0.05 to 0.25 seconds (extremely frequent/short)
+            }, getRandomInt(100, 500)); // Pop up every 0.1 to 0.5 second (extremely frequent)
+        }
+
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial random header text (will be replaced on first click from main content)
+            randomHeader.textContent = generateRandomString(getRandomInt(10, 20));
+
+            // Add the always-accessible ". MANIFEST ." link
+            const allLyricsLink = document.createElement('a');
+            allLyricsLink.href = "#";
+            allLyricsLink.classList.add('obscure-link');
+            allLyricsLink.textContent = ". M A N I F E S T .";
+            allLyricsLink.style.position = 'fixed'; // Fixed position to always be available
+            allLyricsLink.style.bottom = '1.5rem';
+            allLyricsLink.style.right = '1.5rem';
+            allLyricsLink.style.fontSize = '0.8rem'; // Small and subtle
+            allLyricsLink.style.textDecoration = 'none'; // No underline for this special link
+            allLyricsLink.style.color = '#888888'; // Very muted color
+            allLyricsLink.style.padding = '0.2rem 0.5rem';
+            allLyricsLink.style.border = '1px solid #BBBBBB'; // Subtle border
+            allLyricsLink.style.borderRadius = '0px'; /* Sharp corners */
+            allLyricsLink.style.backgroundColor = '#F8F8F8';
+            allLyricsLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Show the new random text popup
+                showContentByType('random-text-popup');
+            });
+            document.body.appendChild(allLyricsLink);
+        });
+    </script>
+</body>
+</html>
